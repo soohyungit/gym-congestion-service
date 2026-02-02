@@ -3,6 +3,10 @@ package com.gym.congestion.service;
 import com.gym.congestion.entity.Gym;
 import com.gym.congestion.entity.User;
 import com.gym.congestion.entity.VisitLog;
+import com.gym.congestion.exception.CheckInNotFoundException;  // 추가
+import com.gym.congestion.exception.GymFullException;
+import com.gym.congestion.exception.GymNotFoundException;      // 추가
+import com.gym.congestion.exception.UserNotFoundException;     // 추가
 import com.gym.congestion.repository.GymRepository;
 import com.gym.congestion.repository.UserRepository;
 import com.gym.congestion.repository.VisitLogRepository;
@@ -15,48 +19,45 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class GymService {
-
     private final GymRepository gymRepository;
     private final UserRepository userRepository;
     private final VisitLogRepository visitLogRepository;
 
-    @Transactional // ⭐ 매우 중요: 이 과정 중 하나라도 실패하면 전부 취소해줘!
+    @Transactional
     public void checkIn(Long userId, Long gymId) {
-        // 1. 유저와 헬스장 정보 가져오기
+        // 변경 전: userRepository.findById(userId).orElseThrow();
+        // 변경 후: 명확한 예외 메시지
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
         Gym gym = gymRepository.findById(gymId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 헬스장입니다."));
+                .orElseThrow(() -> new GymNotFoundException(gymId));
 
-        // 2. 헬스장 현재 인원수 +1 증가
+        // [추가] 정원 초과 여부 확인
+        if (gym.getCurrentCount() >= gym.getMaxCapacity()) {
+            throw new GymFullException(gymId);
+        }
+
         gym.updateCurrentCount(gym.getCurrentCount() + 1);
-
-        // 3. 방문 로그 생성 및 저장
-        VisitLog log = VisitLog.builder()
+        visitLogRepository.save(VisitLog.builder()
                 .user(user)
                 .gym(gym)
                 .checkInAt(LocalDateTime.now())
-                .build();
-
-        visitLogRepository.save(log);
+                .build());
     }
-    // GymService.java에 추가
+
     @Transactional
     public void checkOut(Long userId, Long gymId) {
-        // 1. 해당 유저가 해당 헬스장에 입장해서 아직 안 나간 로그를 찾음
-        VisitLog log = visitLogRepository.findFirstByUserIdAndGymIdAndCheckOutAtIsNullOrderByCheckInAtDesc(userId, gymId)
-                .orElseThrow(() -> new IllegalArgumentException("입장 기록이 없는 사용자입니다."));
+        // 변경 전: .orElseThrow(() -> new IllegalStateException("입장 기록이 없습니다."));
+        // 변경 후: 어떤 사용자, 어떤 헬스장인지 명확
+        VisitLog log = visitLogRepository
+                .findFirstByUserIdAndGymIdAndCheckOutAtIsNullOrderByCheckInAtDesc(userId, gymId)
+                .orElseThrow(() -> new CheckInNotFoundException(userId, gymId));
 
-        // 2. 헬스장 정보 가져오기
         Gym gym = gymRepository.findById(gymId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 헬스장입니다."));
+                .orElseThrow(() -> new GymNotFoundException(gymId));
 
-        // 3. 인원수 -1 감소 (0보다 작아지지 않게 로직을 넣으면 더 좋아!)
-        if (gym.getCurrentCount() > 0) {
-            gym.updateCurrentCount(gym.getCurrentCount() - 1);
-        }
-
-        // 4. 퇴장 시간 기록 (아까 엔티티에 만든 메서드 호출)
+        gym.updateCurrentCount(gym.getCurrentCount() - 1);
         log.recordCheckOut();
     }
 }

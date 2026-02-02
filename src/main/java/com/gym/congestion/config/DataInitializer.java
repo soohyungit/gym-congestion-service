@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+
 @Component
 public class DataInitializer implements CommandLineRunner {
 
@@ -31,37 +32,43 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        // --- [1] 헬스장 데이터 생성 및 저장 ---
+        // --- [1] 첫 번째 헬스장 (비타민 휘트니스 - ID: 1) ---
         Gym gym1 = Gym.builder()
                 .name("비타민 휘트니스")
                 .location("서울시 강남구")
                 .maxCapacity(50)
-                .currentCount(11) // 한 명 입장한 상태로 설정
+                .currentCount(11) // 22% -> "여유" 예상
                 .build();
-
         gymRepository.save(gym1);
 
-        // --- [2] 사용자 데이터 생성 및 저장 ---
+        // --- [2] 두 번째 헬스장 추가 (애플 헬스장 - ID: 2) ---
+        Gym gym2 = Gym.builder()
+                .name("애플 헬스장")
+                .location("서울시 마포구")
+                .maxCapacity(30)
+                .currentCount(25) // 83% -> "혼잡" 예상
+                .build();
+        gymRepository.save(gym2);
+
+        // --- [3] 사용자 데이터 (ID: 1) ---
         User user1 = User.builder()
                 .email("test@example.com")
                 .password("1234")
                 .nickname("헬린이")
                 .build();
-
         userRepository.save(user1);
 
-        // --- [3] 방문 로그 생성 및 저장 (연결 과정) ---
-        // 위에서 저장된 gym1과 user1을 그대로 사용하여 로그를 만듦
+        // --- [4] 방문 로그 (user1이 gym1에 있는 상태로 시작) ---
         VisitLog log = VisitLog.builder()
-                .user(user1)   // 어떤 유저가?
-                .gym(gym1)     // 어느 헬스장에?
-                .checkInAt(LocalDateTime.now()) // 지금 이 시간에!
+                .user(user1)
+                .gym(gym1)
+                .checkInAt(LocalDateTime.now())
                 .build();
-
         visitLogRepository.save(log);
 
         System.out.println("==========================================");
-        System.out.println(">> [성공] 헬스장, 유저, 방문로그 데이터 적재 완료!");
+        System.out.println(">> [성공] 헬스장 2개, 유저 1명, 방문로그 데이터 적재 완료!");
+        System.out.println(">> 비타민 휘트니스 (ID: 1), 애플 헬스장 (ID: 2)");
         System.out.println("==========================================");
     }
 }

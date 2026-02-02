@@ -1,0 +1,125 @@
+### 헬스장 목록 조회
+GET http://localhost:8080/api/gyms
+
+###
+
+### 특정 헬스장 조회
+GET http://localhost:8080/api/gyms/1
+
+###
+
+### 입장 테스트
+POST http://localhost:8080/api/gyms/check-in
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "gymId": 1
+}
+
+### 2번 헬스장(애플 헬스장) 입장 테스트
+POST http://localhost:8080/api/gyms/check-in
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "gymId": 2
+}
+###
+
+### 퇴장 테스트
+POST http://localhost:8080/api/gyms/check-out
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "gymId": 1
+}
+
+###
+
+### 존재하지 않는 사용자 테스트
+POST http://localhost:8080/api/gyms/check-in
+Content-Type: application/json
+
+{
+  "userId": 999,
+  "gymId": 1
+}
+
+
+### Step 3️⃣: 실행하기
+
+파일을 저장하면 이렇게 보일 거야:
+```
+### 헬스장 목록 조회
+GET http://localhost:8080/api/gyms     ▶️ Run  (← 이 버튼이 보임!)
+
+###
+```
+
+**각 요청 옆에 초록색 ▶️ 버튼**이 나타나!
+
+---
+
+### Step 4️⃣: 애플리케이션 실행 후 테스트
+
+**먼저 Spring Boot 실행:**
+1. `Application.java` (또는 메인 클래스) 찾기
+2. 우클릭 → Run
+3. 콘솔에 "Started" 뜨면 준비 완료!
+
+**그 다음 HTTP 요청 실행:**
+1. `api-test.http` 파일 열기
+2. 첫 번째 요청의 **▶️ Run** 버튼 클릭
+3. 아래 창에 결과가 나타남!
+
+---
+
+## 📊 결과 보는 법
+
+### 성공했을 때:
+```
+GET http://localhost:8080/api/gyms
+
+HTTP/1.1 200
+Content-Type: application/json
+Transfer-Encoding: chunked
+Date: ...
+
+[
+  {
+    "id": 1,
+    "name": "피트니스센터 강남점",
+    "location": "서울 강남구",
+    "currentCount": 0,
+    "maxCapacity": 50,
+    "congestionStatus": "여유",
+    "congestionRate": 0.0
+  },
+  {
+    "id": 2,
+    "name": "스포츠클럽 홍대점",
+    "location": "서울 마포구",
+    "currentCount": 0,
+    "maxCapacity": 30,
+    "congestionStatus": "여유",
+    "congestionRate": 0.0
+  }
+]
+```
+
+### 에러났을 때:
+```
+POST http://localhost:8080/api/gyms/check-in
+
+HTTP/1.1 500
+Content-Type: application/json
+
+{
+  "timestamp": "2026-02-02T12:00:00",
+  "status": 500,
+  "error": "Internal Server Error",
+  "message": "사용자를 찾을 수 없습니다. ID: 999",
+  "path": "/api/gyms/check-in"
+}
