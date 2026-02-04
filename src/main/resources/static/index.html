@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>헬스장 혼잡도 시스템</title>
+    <style>
+        /* CSS: 화면 디자인 설정 */
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
+        h1 { color: #333; }
+        .gym-card {
+            background: white; border: 1px solid #ddd; padding: 15px;
+            margin: 10px 0; border-radius: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #007bff; color: white; border: none;
+            padding: 8px 15px; border-radius: 5px; cursor: pointer;
+        }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+<h1>현재 헬스장 혼잡도 목록</h1>
+<div id="gym-list">목록을 불러오는 중...</div>
+
+<script>
+    /**
+     * 1. 모든 헬스장의 정보를 백엔드로부터 가져와 화면에 그리는 함수
+     */
+    async function loadGyms() {
+        try {
+            // 백엔드의 GET API 호출
+            const response = await fetch('http://localhost:8080/api/gyms');
+            const gyms = await response.json();
+
+            const listDiv = document.getElementById('gym-list');
+            listDiv.innerHTML = ''; // 이전 목록 초기화
+
+            gyms.forEach(gym => {
+                // 각 헬스장 정보를 HTML 카드로 생성
+                const gymHtml = `
+                        <div class="gym-card">
+                            <h3>${gym.name}</h3>
+                            <p>인원: <strong>${gym.currentCount}</strong> / ${gym.maxCapacity}</p>
+                            <button onclick="checkIn(${gym.id})">입장하기</button>
+                        </div>
+                    `;
+                listDiv.innerHTML += gymHtml;
+            });
+        } catch (error) {
+            console.error('데이터 로드 실패:', error);
+            document.getElementById('gym-list').innerText = '서버 연결 실패';
+        }
+    }
+
+    /**
+     * 2. 입장하기 버튼 클릭 시 호출되는 함수 (POST 방식)
+     */
+    async function checkIn(gymId) {
+        const userId = 1; // 실제 서비스라면 로그인된 유저 ID를 사용하겠지만, 현재는 테스트용 1번 고정
+
+        try {
+            // 백엔드의 POST API 호출 (DTO 구조와 맞춰서 전송)
+            const response = await fetch('http://localhost:8080/api/gyms/check-in', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userId, gymId: gymId })
+            });
+
+            if (response.ok) {
+                const message = await response.text();
+                alert(message); // "입장이 완료되었습니다!"
+                loadGyms();    // 성공 후 인원수 갱신을 위해 목록 다시 불러오기
+            } else {
+                // 백엔드의 GlobalExceptionHandler에서 보낸 커스텀 예외 메시지 출력
+                const errorMsg = await response.text();
+                alert("입장 불가: " + errorMsg);
+            }
+        } catch (error) {
+            alert("서버 통신 오류");
+        }
+    }
+
+    // 페이지 로드 시 즉시 목록 실행
+    loadGyms();
+</script>
+</body>
+</html>
