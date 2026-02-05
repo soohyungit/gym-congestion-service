@@ -29,23 +29,29 @@
      */
     async function loadGyms() {
         try {
-            // 백엔드의 GET API 호출
             const response = await fetch('http://localhost:8080/api/gyms');
             const gyms = await response.json();
 
             const listDiv = document.getElementById('gym-list');
-            listDiv.innerHTML = ''; // 이전 목록 초기화
+            listDiv.innerHTML = '';
 
             gyms.forEach(gym => {
-                // 각 헬스장 정보를 HTML 카드로 생성
-                const gymHtml = `
-                        <div class="gym-card">
-                            <h3>${gym.name}</h3>
-                            <p>인원: <strong>${gym.currentCount}</strong> / ${gym.maxCapacity}</p>
-                            <button onclick="checkIn(${gym.id})">입장하기</button>
-                        </div>
-                    `;
-                listDiv.innerHTML += gymHtml;
+                let statusColor = "green";
+                if (gym.congestionStatus === "보통") statusColor = "orange";
+                if (gym.congestionStatus === "혼잡") statusColor = "red";
+
+                // 변수에 담기만 하는 게 아니라, 매 루프마다 listDiv에 추가(+=)해줘야 해!
+                listDiv.innerHTML += `
+                 <div class="gym-card">
+                    <h3>${gym.name}</h3>
+                    <p>상태: <span style="color: ${statusColor}; font-weight: bold;">${gym.congestionStatus}</span> (${gym.congestionRate}%)</p>
+                    <p>인원: <strong>${gym.currentCount}</strong> / ${gym.maxCapacity}</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="checkIn(${gym.id})">입장하기</button>
+                        <button onclick="checkOut(${gym.id})" style="background-color: #dc3545;">퇴장하기</button>
+                    </div>
+                  </div>
+            `;
             });
         } catch (error) {
             console.error('데이터 로드 실패:', error);
@@ -80,7 +86,27 @@
             alert("서버 통신 오류");
         }
     }
+    async function checkOut(gymId) {
+        const userId = 1; // 테스트용 고정 ID
+        try {
+            const response = await fetch('http://localhost:8080/api/gyms/check-out', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userId, gymId: gymId })
+            });
 
+            if (response.ok) {
+                const message = await response.text();
+                alert(message);
+                loadGyms(); // 인원수 감소 확인을 위해 새로고침
+            } else {
+                const errorMsg = await response.text();
+                alert("퇴장 실패: " + errorMsg);
+            }
+        } catch (error) {
+            alert("서버 통신 오류");
+        }
+    }
     // 페이지 로드 시 즉시 목록 실행
     loadGyms();
 </script>

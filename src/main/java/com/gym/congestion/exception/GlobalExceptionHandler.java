@@ -24,4 +24,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleGymFull(GymFullException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
+    @ExceptionHandler(CheckInNotFoundException.class)
+    public ResponseEntity<String> handleCheckInNotFound(CheckInNotFoundException e) {
+        // 400(Bad Request)이나 404(Not Found)를 사용하는 것이 적절해
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
 }
