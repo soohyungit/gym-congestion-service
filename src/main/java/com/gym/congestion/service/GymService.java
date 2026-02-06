@@ -30,14 +30,13 @@ public class GymService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        Gym gym = gymRepository.findById(gymId)
+        // ⭐ 일반 findById 대신 락이 걸린 메서드 사용!
+        Gym gym = gymRepository.findByIdWithLock(gymId)
                 .orElseThrow(() -> new GymNotFoundException(gymId));
-
         // [추가] 정원 초과 여부 확인
         if (gym.getCurrentCount() >= gym.getMaxCapacity()) {
             throw new GymFullException(gymId);
         }
-
         gym.updateCurrentCount(gym.getCurrentCount() + 1);
         visitLogRepository.save(VisitLog.builder()
                 .user(user)
@@ -54,7 +53,8 @@ public class GymService {
                 .findFirstByUserIdAndGymIdAndCheckOutAtIsNullOrderByCheckInAtDesc(userId, gymId)
                 .orElseThrow(() -> new CheckInNotFoundException(userId, gymId));
 
-        Gym gym = gymRepository.findById(gymId)
+        // ⭐ 퇴장할 때도 자물쇠를 걸어서 '수정 권한'을 독점해야 해!
+        Gym gym = gymRepository.findByIdWithLock(gymId)
                 .orElseThrow(() -> new GymNotFoundException(gymId));
 
         gym.updateCurrentCount(gym.getCurrentCount() - 1);
