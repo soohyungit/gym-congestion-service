@@ -31,6 +31,11 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        // 1. 데이터가 이미 존재하는지 확인 (헬스장 데이터가 이미 있다면 실행하지 않음)
+        if (gymRepository.count() > 0) {
+            System.out.println(">> [알림] 이미 초기 데이터가 존재하여 생성을 건너뜁니다.");
+            return;
+        }
 
         // --- [1] 첫 번째 헬스장 (비타민 휘트니스 - ID: 1) ---
         Gym gym1 = Gym.builder()
