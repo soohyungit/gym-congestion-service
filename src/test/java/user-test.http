@@ -1,0 +1,23 @@
+### 회원가입 테스트
+POST http://localhost:8080/api/users/join
+Content-Type: application/json
+
+{
+  "email": "future@hynix.com",
+  "password": "password1234",
+  "nickname": "하이닉스주니어"
+}
+
+### 로그인 테스트
+POST http://127.0.0.1:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "future@hynix.com",
+  "password": "password1234"
+}
+### 토큰 없이 요청 보내기
+GET http://127.0.0.1:8080/api/gyms
+### 토큰을 헤더에 담아 요청 보내기
+GET http://127.0.0.1:8080/api/gyms
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6ImZ1dHVyZUBoeW5peC5jb20iLCJpYXQiOjE3NzA2MTUzOTUsImV4cCI6MTc3MDYxODk5NX0.xojyqPJUXTZSIejtAM3NB9wk5TVyysE04lj8rVef7k0
