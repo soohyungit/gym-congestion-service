@@ -45,6 +45,6 @@ public class UserService {
         }
 
         // 3. 로그인 성공 시 JWT 토큰 발행
-        return jwtTokenUtil.createToken(user.getEmail());
+        return jwtTokenUtil.createToken(user.getId(), user.getEmail());
     }
 }

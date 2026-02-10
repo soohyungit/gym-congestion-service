@@ -17,18 +17,18 @@ public class JwtTokenUtil {
     private String secretKey = "your-very-long-and-secure-secret-key-for-gym-service-2026";
     private long expireTimeMs = 1000 * 60 * 60; // 1시간
 
-    public String createToken(String email) {
-        // 2. 문자열을 보안성이 검증된 'SecretKey' 객체로 변환
+    public String createToken(Long id, String email) { // 1. Long id 인자 추가
         SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
         Claims claims = Jwts.claims();
-        claims.put("email", email);
+        claims.put("id", id);       // 2. id 심기
+        claims.put("email", email); // 기존 이메일 유지
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expireTimeMs))
-                .signWith(key, SignatureAlgorithm.HS256) // 수정된 부분!
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
     public String getEmail(String token) {

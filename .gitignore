@@ -35,3 +35,12 @@ out/
 
 ### VS Code ###
 .vscode/
+# 의존성 폴더 제외
+node_modules/
+
+# 빌드 결과물 제외
+dist/
+build/
+
+# 기타 설정 파일
+.env
